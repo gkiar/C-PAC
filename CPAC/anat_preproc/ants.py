@@ -183,7 +183,7 @@ def init_brain_extraction_wf(tpl_target_path,
 
     copy_xform = pe.Node(CopyXForm(
         fields=['out_file', 'out_mask', 'bias_corrected', 'bias_image']),
-        name='copy_xform', run_without_submitting=True, mem_gb=2.5)
+        name='copy_xform', run_without_submitting=True, mem_gb=mem_gb)
 
     trunc = pe.MapNode(ImageMath(operation='TruncateImageIntensity', op2='0.01 0.999 256'),
                        name='truncate_images', iterfield=['op1'])
@@ -232,7 +232,7 @@ def init_brain_extraction_wf(tpl_target_path,
         'CPAC.anat_preproc', 'data/'+settings_file % normalization_quality)),
         name='norm',
         n_procs=omp_nthreads,
-        mem_gb=mem_gb)
+        mem_gb=mem_gb + 1)
     norm.inputs.float = use_float
     fixed_mask_trait = 'fixed_image_mask'
     if _ants_version and parseversion(_ants_version) >= Version('2.2.0'):
@@ -329,11 +329,13 @@ def init_brain_extraction_wf(tpl_target_path,
         atropos_wf = init_atropos_wf(
             use_random_seed=atropos_use_random_seed,
             omp_nthreads=omp_nthreads,
-            mem_gb=mem_gb,
+            mem_gb=28,
             in_segmentation_model=atropos_model,
         )
-        sel_wm = pe.Node(niu.Select(index=atropos_model[-1] - 1), name='sel_wm',
-                         run_without_submitting=True)
+        sel_wm = pe.Node(niu.Select(index=atropos_model[-1] - 1), 
+                         name='sel_wm',
+                         run_without_submitting=True,
+                         mem_gb=22.0)
 
         wf.disconnect([
             (get_brainmask, apply_mask, [('output_image', 'mask_file')]),
@@ -417,7 +419,7 @@ def init_atropos_wf(name='atropos_wf',
 
     copy_xform = pe.Node(CopyXForm(
         fields=['out_mask', 'out_segm', 'out_tpms']),
-        name='copy_xform', run_without_submitting=True, mem_gb=2.5)
+        name='copy_xform', run_without_submitting=True, mem_gb=mem_gb)
 
     # Run atropos (core node)
     atropos = pe.Node(Atropos(
@@ -455,7 +457,8 @@ def init_atropos_wf(name='atropos_wf',
     # ImageMath ${DIMENSION} ${EXTRACTION_TMP} FillHoles ${EXTRACTION_GM} 2
     # MultiplyImages ${DIMENSION} ${EXTRACTION_GM} ${EXTRACTION_TMP} ${EXTRACTION_GM}
     fill_gm = pe.Node(ImageMath(operation='FillHoles', op2='2'),
-                      name='07_fill_gm')
+                      name='07_fill_gm',
+                      mem_gb=3.0)
     mult_gm = pe.Node(MultiplyImages(
         dimension=3, output_product_image='08_mult_gm.nii.gz'), name='08_mult_gm')
 
@@ -495,7 +498,8 @@ def init_atropos_wf(name='atropos_wf',
     md_7 = pe.Node(ImageMath(operation='MD', op2='4'), name='18_md_7')
     # ImageMath ${DIMENSION} ${EXTRACTION_MASK} FillHoles ${EXTRACTION_MASK} 2
     fill_7 = pe.Node(ImageMath(operation='FillHoles', op2='2'),
-                     name='19_fill_7')
+                     name='19_fill_7',
+                     mem_gb=3.0)
     # ImageMath ${DIMENSION} ${EXTRACTION_MASK} addtozero ${EXTRACTION_MASK} \
     # ${EXTRACTION_MASK_PRIOR_WARPED}
     add_7_2 = pe.Node(ImageMath(operation='addtozero'), name='20_add_7_2')

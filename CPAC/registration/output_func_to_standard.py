@@ -136,7 +136,8 @@ def fsl_apply_transform_func_to_mni(
         workflow.connect(split, 'split_funcs', func_mni_warp, 'in_file')
 
         func_concat = pe.Node(interface=afni_utils.TCat(),
-                              name=f'func_concat{node_id}')
+                              name=f'func_concat_{node_id}',
+                              mem_gb=4.0)
         func_concat.inputs.outputtype = 'NIFTI_GZ'
 
         workflow.connect(func_mni_warp, 'out_file',
@@ -678,7 +679,8 @@ def ants_apply_warps_func_mni(
         workflow.connect(split, 'split_funcs', apply_ants_warp, 'input_image')
 
         func_concat = pe.Node(interface=afni_utils.TCat(),
-                              name=f'func_concat_{node_id}')
+                              name=f'func_concat_{node_id}',
+                              mem_gb=4.0)
         func_concat.inputs.outputtype = 'NIFTI_GZ'
 
         workflow.connect(apply_ants_warp, 'output_image',

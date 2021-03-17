@@ -274,7 +274,8 @@ def create_qc_snr(wf_name='qc_snr'):
                           name='outputspec')
 
     std_dev = pe.Node(afni.TStat(args='-stdev'),
-                      name='std_dev')
+                      name='std_dev',
+                      mem_gb=4.0)
 
     std_dev.inputs.outputtype = 'NIFTI_GZ'
     wf.connect(input_node, 'functional_preprocessed', std_dev, 'in_file')

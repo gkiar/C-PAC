@@ -697,7 +697,8 @@ def create_regressor_workflow(nuisance_selectors,
                          name='outputspec')
 
     functional_mean = pe.Node(interface=afni_utils.TStat(),
-                        name='functional_mean')
+                        name='functional_mean',
+                        mem_gb=4.0)
 
     functional_mean.inputs.options = '-mean'
     functional_mean.inputs.outputtype = 'NIFTI_GZ'
@@ -1503,7 +1504,8 @@ def create_nuisance_regression_workflow(nuisance_selectors,
 
     # Use 3dTproject to perform nuisance variable regression
     nuisance_regression = pe.Node(interface=afni.TProject(),
-                                  name='nuisance_regression')
+                                  name='nuisance_regression',
+                                  mem_gb=5.0)
 
     nuisance_regression.inputs.out_file = 'residuals.nii.gz'
     nuisance_regression.inputs.outputtype = 'NIFTI_GZ'
@@ -1591,14 +1593,15 @@ def filtering_bold_and_regressors(nuisance_selectors,
 
         frequency_filter = pe.Node(
                     Function(input_names=['realigned_file',
-                                        'regressor_file',
-                                        'bandpass_freqs',
-                                        'sample_period'],
-                            output_names=['bandpassed_file',
-                                        'regressor_file'],
-                            function=bandpass_voxels,
-                            as_module=True),
-                    name='frequency_filter'
+                                          'regressor_file',
+                                          'bandpass_freqs',
+                                          'sample_period'],
+                             output_names=['bandpassed_file',
+                                           'regressor_file'],
+                             function=bandpass_voxels,
+                             as_module=True),
+                    name='frequency_filter',
+                    mem_gb=16.0
                 )
 
         frequency_filter.inputs.bandpass_freqs = [

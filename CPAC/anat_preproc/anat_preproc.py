@@ -395,7 +395,9 @@ def niworkflows_ants_brain_connector(wf, cfg, strat_pool, pipe_num, opt):
                                                         'brain_extraction'][
                                                         'niworkflows-ants'][
                                                         'regmask_path'],
-                                                    name='anat_skullstrip_ants')
+                                                    name='anat_skullstrip_'
+                                                         'ants',
+                                                    mem_gb=28)
 
     node, out = strat_pool.get_data(['desc-preproc_T1w', 'desc-reorient_T1w',
                                      'T1w'])

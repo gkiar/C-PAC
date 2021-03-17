@@ -380,7 +380,8 @@ def create_wf_edit_func(wf_name="edit_func"):
 
     # allocate a node to edit the functional file
     func_drop_trs = pe.Node(interface=afni_utils.Calc(),
-                            name='func_drop_trs')
+                            name='func_drop_trs',
+                            mem_gb=4.0)
 
     func_drop_trs.inputs.expr = 'a'
     func_drop_trs.inputs.outputtype = 'NIFTI_GZ'
@@ -419,7 +420,8 @@ def slice_timing_wf(name='slice_timing'):
 
     # create TShift AFNI node
     func_slice_timing_correction = pe.Node(interface=preprocess.TShift(),
-                                           name='slice_timing')
+                                           name='slice_timing',
+                                           mem_gb=7.0)
     func_slice_timing_correction.inputs.outputtype = 'NIFTI_GZ'
 
     wf.connect([
@@ -560,7 +562,8 @@ def motion_correct_connections(wf, cfg, strat_pool, pipe_num, opt):
                        func_motion_correct, 'in_file')
 
             func_concat = pe.Node(interface=afni_utils.TCat(),
-                                  name=f'func_concat_{pipe_num}')
+                                  name=f'func_concat_{pipe_num}',
+                                  mem_gb=4.0)
             func_concat.inputs.outputtype = 'NIFTI_GZ'
 
             wf.connect(func_motion_correct, 'out_file',
@@ -640,7 +643,8 @@ def motion_correct_connections(wf, cfg, strat_pool, pipe_num, opt):
             if int(cfg.pipeline_setup['system_config'][
                        'max_cores_per_participant']) > 1:
                 motion_concat = pe.Node(interface=afni_utils.TCat(),
-                                        name=f'motion_concat_{pipe_num}')
+                                        name=f'motion_concat_{pipe_num}',
+                                        mem_gb=4.0)
                 motion_concat.inputs.outputtype = 'NIFTI_GZ'
 
                 wf.connect(func_motion_correct_A, 'out_file',
@@ -884,7 +888,8 @@ def func_despike(wf, cfg, strat_pool, pipe_num, opt=None):
     '''
 
     despike = pe.Node(interface=preprocess.Despike(),
-                      name=f'func_despiked_{pipe_num}')
+                      name=f'func_despiked_{pipe_num}',
+                      mem_gb=6.5)
     despike.inputs.outputtype = 'NIFTI_GZ'
 
     node, out = strat_pool.get_data(["desc-preproc_bold", "bold"])
@@ -941,14 +946,16 @@ def func_reorient(wf, cfg, strat_pool, pipe_num, opt=None):
     '''
 
     func_deoblique = pe.Node(interface=afni_utils.Refit(),
-                             name=f'func_deoblique_{pipe_num}')
+                             name=f'func_deoblique_{pipe_num}',
+                             mem_gb=4.0)
     func_deoblique.inputs.deoblique = True
 
     node, out = strat_pool.get_data(['desc-preproc_bold', 'bold'])
     wf.connect(node, out, func_deoblique, 'in_file')
 
     func_reorient = pe.Node(interface=afni_utils.Resample(),
-                            name=f'func_reorient_{pipe_num}')
+                            name=f'func_reorient_{pipe_num}',
+                            mem_gb=7.0)
 
     func_reorient.inputs.orientation = 'RPI'
     func_reorient.inputs.outputtype = 'NIFTI_GZ'
@@ -982,7 +989,8 @@ def get_motion_ref(wf, cfg, strat_pool, pipe_num, opt=None):
 
     if opt == 'mean':
         func_get_RPI = pe.Node(interface=afni_utils.TStat(),
-                               name=f'func_get_mean_RPI_{pipe_num}')
+                               name=f'func_get_mean_RPI_{pipe_num}',
+                               mem_gb=4.0)
 
         func_get_RPI.inputs.options = '-mean'
         func_get_RPI.inputs.outputtype = 'NIFTI_GZ'
@@ -1354,7 +1362,8 @@ def bold_mask_fsl(wf, cfg, strat_pool, pipe_num, opt=None):
     if cfg.functional_preproc['func_masking']['FSL-BET'][
         'functional_mean_boolean']:
         func_skull_mean = pe.Node(interface=afni_utils.TStat(),
-                                  name=f'func_mean_skull_{pipe_num}')
+                                  name=f'func_mean_skull_{pipe_num}',
+                                  mem_gb=4.0)
         func_skull_mean.inputs.options = '-mean'
         func_skull_mean.inputs.outputtype = 'NIFTI_GZ'
 
@@ -1400,7 +1409,8 @@ def bold_mask_fsl_afni(wf, cfg, strat_pool, pipe_num, opt=None):
     '''
 
     func_skull_mean = pe.Node(interface=afni_utils.TStat(),
-                              name=f'func_mean_skull_{pipe_num}')
+                              name=f'func_mean_skull_{pipe_num}',
+                              mem_gb=4.0)
     func_skull_mean.inputs.options = '-mean'
     func_skull_mean.inputs.outputtype = 'NIFTI_GZ'
 
@@ -1483,14 +1493,16 @@ def bold_mask_anatomical_refined(wf, cfg, strat_pool, pipe_num, opt=None):
                                        wf_name=f'init_bold_mask_{pipe_num}')
 
     func_deoblique = pe.Node(interface=afni_utils.Refit(),
-                             name=f'raw_func_deoblique_{pipe_num}')
+                             name=f'raw_func_deoblique_{pipe_num}',
+                             mem_gb=4.0)
     func_deoblique.inputs.deoblique = True
 
     node, out = strat_pool.get_data('bold')
     wf.connect(node, out, func_deoblique, 'in_file')
 
     func_reorient = pe.Node(interface=afni_utils.Resample(),
-                            name=f'raw_func_reorient_{pipe_num}')
+                            name=f'raw_func_reorient_{pipe_num}',
+                            mem_gb=7.0)
 
     func_reorient.inputs.orientation = 'RPI'
     func_reorient.inputs.outputtype = 'NIFTI_GZ'
@@ -1674,7 +1686,8 @@ def bold_masking(wf, cfg, strat_pool, pipe_num, opt=None):
     '''
 
     func_edge_detect = pe.Node(interface=afni_utils.Calc(),
-                               name=f'func_extract_brain_{pipe_num}')
+                               name=f'func_extract_brain_{pipe_num}',
+                               mem_gb=4.0)
 
     func_edge_detect.inputs.expr = 'a*b'
     func_edge_detect.inputs.outputtype = 'NIFTI_GZ'
@@ -1705,7 +1718,8 @@ def func_mean(wf, cfg, strat_pool, pipe_num, opt=None):
     '''
 
     func_mean = pe.Node(interface=afni_utils.TStat(),
-                        name=f'func_mean_{pipe_num}')
+                        name=f'func_mean_{pipe_num}',
+                        mem_gb=4.0)
 
     func_mean.inputs.options = '-mean'
     func_mean.inputs.outputtype = 'NIFTI_GZ'
@@ -1735,7 +1749,7 @@ def func_normalize(wf, cfg, strat_pool, pipe_num, opt=None):
 
     func_normalize = pe.Node(interface=fsl.ImageMaths(),
                              name=f'func_normalize_{pipe_num}',
-                             mem_gb=3.0)
+                             mem_gb=7.0)
     func_normalize.inputs.op_string = '-ing 10000'
     func_normalize.inputs.out_data_type = 'float'
 
@@ -1744,7 +1758,7 @@ def func_normalize(wf, cfg, strat_pool, pipe_num, opt=None):
 
     func_mask_normalize = pe.Node(interface=fsl.ImageMaths(),
                                   name=f'func_mask_normalize_{pipe_num}',
-                                  mem_gb=3.0)
+                                  mem_gb=7.0)
     func_mask_normalize.inputs.op_string = '-Tmin -bin'
     func_mask_normalize.inputs.out_data_type = 'char'
 
